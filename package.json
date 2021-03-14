@@ -1,0 +1,19 @@
+{
+  "name": "react-data-loader",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": ["dist"],
+  "types": "dist/index.d.ts",
+  "author": "Tuomas Inkinen",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -cw"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^8.2.0",
+    "rollup": "^2.41.2",
+    "typescript": "^4.2.3"
+  }
+}
