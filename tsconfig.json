@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "declarationDir": "./dist",
-    "module": "es6",
+    "allowSyntheticDefaultImports": true,
+    "module": "esnext",
     "noImplicitAny": true,
-    "outDir": "./dist",
-    "target": "esnext"
+    "target": "esnext",
+    "jsx": "react",
+    "strict": true,
+    "moduleResolution": "node",
   },
   "include": [
     "src/**/*"
