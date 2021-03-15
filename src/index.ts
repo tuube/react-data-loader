@@ -1,7 +1,3 @@
-export interface HelloInput {
-  input: string;
-}
+import _provider from './provider';
 
-export function hello(input: HelloInput): string {
-  return `Hello ${input.input}`;
-}
+export const DataLoaderProvider = _provider;
