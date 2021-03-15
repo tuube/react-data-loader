@@ -1,3 +1,6 @@
 node_modules
 dist
 dev-log.md
+
+/example/node_modules
+/example/build
