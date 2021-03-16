@@ -1,11 +1,7 @@
 import { createContext } from 'react';
+import DataLoader from './DataLoader';
 
-export interface IDataLoaderContext {
-  dataSources: string[] | undefined;
-}
 
-const context = createContext<IDataLoaderContext>({
-  dataSources: undefined,
-});
+const dataLoaderContext = createContext<DataLoader | undefined>(undefined);
 
-export default context;
+export default dataLoaderContext;

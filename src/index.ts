@@ -1,3 +1,7 @@
-import _provider from './provider';
+import DataLoaderProvider from './provider';
+import useDataLoader from './useDataLoader';
 
-export const DataLoaderProvider = _provider;
+export {
+  DataLoaderProvider,
+  useDataLoader,
+} 
