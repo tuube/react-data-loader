@@ -7,7 +7,7 @@ import { DataLoaderProvider } from 'react-data-loader';
 
 ReactDOM.render(
   <React.StrictMode>
-    <DataLoaderProvider>
+    <DataLoaderProvider dataSources={[]}>
       <App />
     </DataLoaderProvider>
   </React.StrictMode>,
