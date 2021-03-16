@@ -6,12 +6,13 @@
   "files": [
     "dist"
   ],
-  "types": "dist/types/react-data-loader.d.ts",
+  "types": "dist/types/index.d.ts",
   "author": "Tuomas Inkinen",
   "license": "MIT",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -cw"
+    "watch": "rollup -cw",
+    "link-react-to-example": "cd node_modules/react; yarn link; cd ../react-dom; yarn link; cd ../../example; yarn link react; yarn link react-dom"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.0",
