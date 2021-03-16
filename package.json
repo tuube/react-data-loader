@@ -6,7 +6,7 @@
   "files": [
     "dist"
   ],
-  "types": "dist/index.d.ts",
+  "types": "dist/types/react-data-loader.d.ts",
   "author": "Tuomas Inkinen",
   "license": "MIT",
   "scripts": {
