@@ -14,7 +14,7 @@ export default class DataLoader {
     this.dataSources = dataSources;
   }
 
-  addSubscriber(dataSource: DataSource['name']) {
+  addSubscriber(dataSource: DataSource['name']): void {
     const foundDataSource = this.dataSources.find((ds) => ds.name === dataSource);
 
     if (foundDataSource === undefined) {

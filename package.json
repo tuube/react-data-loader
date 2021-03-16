@@ -10,13 +10,19 @@
   "author": "Tuomas Inkinen",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c",
+    "build": "yarn lint && rollup -c",
     "watch": "rollup -cw",
+    "lint": "yarn run eslint",
     "link-react-to-example": "cd node_modules/react; yarn link; cd ../react-dom; yarn link; cd ../../example; yarn link react; yarn link react-dom"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.0",
     "@types/react": "^17.0.3",
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-react": "^7.22.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "rollup": "^2.41.2",

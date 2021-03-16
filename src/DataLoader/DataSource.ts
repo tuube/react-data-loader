@@ -17,11 +17,11 @@ export default class DataSource {
     this.action = action;
   }
 
-  start() {
+  start(): void {
     this.stopFunc = this.action();
   }
 
-  stop() {
+  stop(): void {
     if (this.stopFunc !== undefined) {
       this.stopFunc();
     }
