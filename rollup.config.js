@@ -4,10 +4,12 @@ import pkg from "./package.json";
 export default [
   {
     input: "src/index.ts",
+    sourcemap: true,
     output: {
       dir: "./",
       entryFileNames: pkg.main,
       format: "cjs",
+      sourcemap: true,
     },
     external: [
       ...Object.keys(pkg.dependencies || {}),
@@ -26,6 +28,7 @@ export default [
     output: {
       file: pkg.module,
       format: "es",
+      sourcemap: true,
     },
     external: [
       ...Object.keys(pkg.dependencies || {}),
