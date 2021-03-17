@@ -18,8 +18,8 @@ function App() {
       <button onClick={addTest}>Add test</button>
       <button onClick={removeTest}>Remove test</button>
       <div style={{ margin: "2rem" }}>
-        {tests.map((name) => (
-          <Test name={name} key={name} />
+        {tests.map((name, i) => (
+          <Test name={name} key={name} dataSource={i % 2 === 0 ? 'test1': 'test2'} />
         ))}
       </div>
     </div>
