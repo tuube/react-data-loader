@@ -11,8 +11,6 @@ interface TestProps {
 const Test = ({ name, dataSource }: TestProps): React.ReactElement => {
   const value = useDataLoader<string>(dataSource);
 
-  useEffect(() => {}, [value]);
-
   return (
     <div>
       {name} {value}
