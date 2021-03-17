@@ -21,7 +21,7 @@ export default class DataLoader {
     }
   }
 
-  log(...args: any[]): any {
+  log(...args: any[]): void {
     console.log('DataLoader:', ...args);
   }
 
