@@ -4,10 +4,11 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { DataLoaderProvider } from 'react-data-loader';
+import dataSources from './dataSources';
 
 ReactDOM.render(
   <React.StrictMode>
-    <DataLoaderProvider dataSources={[]}>
+    <DataLoaderProvider dataSources={dataSources}>
       <App />
     </DataLoaderProvider>
   </React.StrictMode>,

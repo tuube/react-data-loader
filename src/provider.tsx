@@ -5,7 +5,7 @@ import DataSource from './DataLoader/DataSource';
 
 interface IDataLoaderProviderProps {
   children: React.ReactNode;
-  dataSources: DataSource[];
+  dataSources: DataSource<unknown>[];
 }
 
 const DataLoaderProvider = ({ dataSources, children }: IDataLoaderProviderProps): React.ReactElement => {
