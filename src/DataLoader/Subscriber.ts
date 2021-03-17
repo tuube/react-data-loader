@@ -1,12 +1,7 @@
-
-function generateId() {
-  return "id";
-}
-
 export default class Subscriber {
   id: string;
 
-  constructor() {
-    this.id = generateId();
+  constructor(id: string) {
+    this.id = id;
   }
 }

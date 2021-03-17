@@ -38,7 +38,7 @@ export default class DataLoader {
       return;
     }
 
-    const newSubscriber = new Subscriber();
+    const newSubscriber = new Subscriber(this.subscriptions.length.toString());
     this.subscriptions.push({
       subscriber: newSubscriber.id,
       dataSource: foundDataSource.name,
@@ -71,7 +71,11 @@ export default class DataLoader {
   }
 
   removeSubscriber(subscription: SubscriptionData): void {
-    const index = this.subscriptions.findIndex((s) => s === subscription);
+    const index = this.subscriptions.findIndex(
+      (s) =>
+        s.subscriber === subscription.subscriber &&
+        s.dataSource === subscription.dataSource
+    );
 
     if (index >= 0) {
       this.log("Removing subscriber", subscription.subscriber);
