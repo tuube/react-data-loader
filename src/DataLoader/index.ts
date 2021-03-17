@@ -22,19 +22,20 @@ export default class DataLoader {
   }
 
   log(...args: any[]): void {
-    console.log('DataLoader:', ...args);
+    console.log("DataLoader:", ...args);
   }
 
   addSubscriber(
     dataSource: string,
     updateFunction: IUpdate<unknown>
-  ): SubscriptionData {
+  ): SubscriptionData | undefined {
     const foundDataSource = this.dataSources.find(
       (ds) => ds.name === dataSource
     );
 
     if (foundDataSource === undefined) {
-      throw `Data source ${dataSource} is not set up`;
+      console.warn(`Data source ${dataSource} is not set up, skipping`);
+      return;
     }
 
     const newSubscriber = new Subscriber();
@@ -44,7 +45,7 @@ export default class DataLoader {
       updateFunction,
     });
 
-    this.log('Adding subscriber', newSubscriber.id);
+    this.log("Adding subscriber", newSubscriber.id);
 
     if (
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
@@ -61,19 +62,19 @@ export default class DataLoader {
 
   private runUpdates(dataSource: string): (value: unknown) => void {
     return (value) => {
-      this.log('Running update for:', dataSource, 'value:', value);
+      this.log("Running update for:", dataSource, "value:", value);
       const foundSubscriptions = this.subscriptions.filter(
         (sub) => sub.dataSource == dataSource
       );
       foundSubscriptions.forEach((sub) => sub.updateFunction(value));
-    }
+    };
   }
 
   removeSubscriber(subscription: SubscriptionData): void {
     const index = this.subscriptions.findIndex((s) => s === subscription);
 
-    if (index) {
-    this.log('Removing subscriber', subscription.subscriber);
+    if (index >= 0) {
+      this.log("Removing subscriber", subscription.subscriber);
 
       this.subscriptions.splice(index, 1);
     }
@@ -81,11 +82,11 @@ export default class DataLoader {
   }
 
   private checkEmptyDataSources() {
-    this.log('Checking for empty data sources');
+    this.log("Checking for empty data sources");
 
     this.dataSources.forEach((ds) => {
       if (!this.subscriptions.some((sub) => sub.dataSource === ds.name)) {
-        this.log('Data source', ds.name, 'is empty, stopping it');
+        this.log("Data source", ds.name, "is empty, stopping it");
         ds.stop();
       }
     });
