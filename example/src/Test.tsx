@@ -1,7 +1,5 @@
 import React from "react";
-import { useEffect } from "react";
 import { useDataLoader } from "react-data-loader";
-
 
 interface TestProps {
   name: string;
