@@ -1,17 +1,15 @@
 import DataSource, { IUpdate } from "./DataSource";
-import Subscriber from "./Subscriber";
 
 interface ISubscription {
-  subscriber: Subscriber["id"];
   dataSource: string;
   updateFunction: IUpdate<unknown>;
 }
 
-type SubscriptionData = Pick<ISubscription, "dataSource" | "subscriber">;
-
 export default class DataLoader {
   private dataSources: DataSource<unknown>[] = [];
   private subscriptions: ISubscription[] = [];
+
+  //#region public
 
   constructor(dataSources: DataSource<unknown>[]) {
     try {
@@ -21,14 +19,10 @@ export default class DataLoader {
     }
   }
 
-  log(...args: unknown[]): void {
-    console.log("DataLoader:", ...args);
-  }
-
   addSubscriber(
     dataSource: string,
     updateFunction: IUpdate<unknown>
-  ): SubscriptionData | undefined {
+  ): number | undefined {
     const foundDataSource = this.dataSources.find(
       (ds) => ds.name === dataSource
     );
@@ -38,14 +32,14 @@ export default class DataLoader {
       return;
     }
 
-    const newSubscriber = new Subscriber(this.subscriptions.length.toString());
     this.subscriptions.push({
-      subscriber: newSubscriber.id,
       dataSource: foundDataSource.name,
       updateFunction,
     });
 
-    this.log("Adding subscriber", newSubscriber.id);
+    const newSubscriber = this.subscriptions.length - 1;
+
+    this.log("Adding subscriber", newSubscriber);
 
     if (
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
@@ -54,34 +48,14 @@ export default class DataLoader {
       foundDataSource.start(this.runUpdates(dataSource));
     }
 
-    return {
-      subscriber: newSubscriber.id,
-      dataSource: foundDataSource.name,
-    };
+    return newSubscriber;
   }
 
-  private runUpdates(dataSource: string): (value: unknown) => void {
-    return (value) => {
-      this.log("Running update for:", dataSource, "value:", value);
-      const foundSubscriptions = this.subscriptions.filter(
-        (sub) => sub.dataSource == dataSource
-      );
-      foundSubscriptions.forEach((sub) => sub.updateFunction(value));
-    };
-  }
+  removeSubscriber(subscriber: number): void {
+    this.log("Removing subscriber", subscriber);
 
-  removeSubscriber(subscription: SubscriptionData): void {
-    const index = this.subscriptions.findIndex(
-      (s) =>
-        s.subscriber === subscription.subscriber &&
-        s.dataSource === subscription.dataSource
-    );
+    this.subscriptions.splice(subscriber, 1);
 
-    if (index >= 0) {
-      this.log("Removing subscriber", subscription.subscriber);
-
-      this.subscriptions.splice(index, 1);
-    }
     this.checkEmptyDataSources();
   }
 
@@ -95,6 +69,9 @@ export default class DataLoader {
       }
     });
   }
+  //#endregion
+
+  //#region private
 
   private validateDataSources(
     dataSources: DataSource<unknown>[]
@@ -109,4 +86,18 @@ export default class DataLoader {
 
     return dataSources;
   }
+  private log(...args: unknown[]): void {
+    console.log("DataLoader:", ...args);
+  }
+
+  private runUpdates(dataSource: string): (value: unknown) => void {
+    return (value) => {
+      this.log("Running update for:", dataSource, "value:", value);
+      const foundSubscriptions = this.subscriptions.filter(
+        (sub) => sub.dataSource == dataSource
+      );
+      foundSubscriptions.forEach((sub) => sub.updateFunction(value));
+    };
+  }
+  //#endregion
 }
