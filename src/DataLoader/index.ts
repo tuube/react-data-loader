@@ -1,19 +1,24 @@
-import DataSource, { IUpdate } from "./DataSource";
+import InternalDataSource, { IUpdate, IAction } from "./InternalDataSource";
+import DataSource from "./DataSource";
 
 interface ISubscription {
   dataSource: string;
   updateFunction: IUpdate<unknown>;
 }
 
+export type DataSourceConfig = Record<string, DataSource<unknown>>;
+
 export default class DataLoader {
-  private dataSources: DataSource<unknown>[] = [];
+  private dataSourceConfig: DataSourceConfig;
+  private dataSources: InternalDataSource<unknown>[] = [];
   private subscriptions: ISubscription[] = [];
 
   //#region public
 
-  constructor(dataSources: DataSource<unknown>[]) {
+  constructor(dataSources: DataSourceConfig) {
+    this.dataSourceConfig = dataSources;
     try {
-      this.dataSources = this.validateDataSources(dataSources);
+      this.dataSources = this.transformDataSources(dataSources);
     } catch (error) {
       console.error("Failed creating DataLoader:", error);
     }
@@ -73,19 +78,19 @@ export default class DataLoader {
 
   //#region private
 
-  private validateDataSources(
-    dataSources: DataSource<unknown>[]
-  ): DataSource<unknown>[] {
-    this.dataSources.reduce((map, dataSource) => {
-      if (map.includes(dataSource.name)) {
-        throw "Mupliple data sources with same name";
+  private transformDataSources(
+    dataSources: DataSourceConfig
+  ): InternalDataSource<unknown>[] {
+    const internalDataSources: InternalDataSource<unknown>[] = [];
+    for (const source in dataSources) {
+      if (Object.prototype.hasOwnProperty.call(dataSources, source)) {
+        const action = dataSources[source];
+        internalDataSources.push(new InternalDataSource(source, action));
       }
-      map.push(dataSource.name);
-      return map;
-    }, [] as string[]);
-
-    return dataSources;
+    }
+    return internalDataSources;
   }
+
   private log(...args: unknown[]): void {
     console.log("DataLoader:", ...args);
   }

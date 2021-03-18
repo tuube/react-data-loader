@@ -1,11 +1,11 @@
 import React from 'react';
 import DataContext from './context';
-import DataLoader from './DataLoader';
-import DataSource from './DataLoader/DataSource';
+import DataLoader, { DataSourceConfig } from './DataLoader';
+import DataSource from './DataLoader/InternalDataSource';
 
 interface IDataLoaderProviderProps {
   children: React.ReactNode;
-  dataSources: DataSource<unknown>[];
+  dataSources: DataSourceConfig;
 }
 
 const DataLoaderProvider = ({ dataSources, children }: IDataLoaderProviderProps): React.ReactElement => {

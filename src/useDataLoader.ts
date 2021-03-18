@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useContext, useEffect, useState } from "react";
 import dataLoaderContext from "./context";
+import DataLoader from './DataLoader';
 
-const useDataLoader = <T>(dataSource: string): T => {
+const useDataLoader = <T>(dataSource: keyof DataLoader['dataSourceConfig']): T => {
   const dataLoader = useContext(dataLoaderContext);
   if (dataLoader === undefined) {
     throw new Error(

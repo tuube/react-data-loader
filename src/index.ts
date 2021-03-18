@@ -1,9 +1,9 @@
 import DataLoaderProvider from './provider';
 import useDataLoader from './useDataLoader';
-import DataSource from './DataLoader/DataSource';
+import {DataSourceConfig} from './DataLoader';
 
 export {
   DataLoaderProvider,
   useDataLoader,
-  DataSource,
+  DataSourceConfig,
 } 
