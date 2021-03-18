@@ -12,20 +12,28 @@
   "scripts": {
     "build": "yarn lint && rollup -c",
     "watch": "rollup -cw",
+    "test": "jest",
     "lint": "yarn run eslint",
     "link-react-to-example": "cd node_modules/react; yarn link; cd ../react-dom; yarn link; cd ../../example; yarn link react; yarn link react-dom"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.0",
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^11.2.5",
+    "@types/jest": "^26.0.21",
     "@types/react": "^17.0.3",
+    "@types/testing-library__jest-dom": "^5.9.5",
+    "@types/testing-library__react": "^10.2.0",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "eslint": "^7.22.0",
     "eslint-plugin-react": "^7.22.0",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "jest": "^26.6.3",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "rollup": "^2.41.2",
+    "ts-jest": "^26.5.4",
     "typescript": "^4.2.3"
   },
   "peerDependencies": {
