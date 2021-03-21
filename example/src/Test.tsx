@@ -1,13 +1,14 @@
 import React from "react";
-import { useDataLoader } from "react-data-loader";
+
+import { useDataSource, AppDataSources } from "./dataLoader";
 
 interface TestProps {
   name: string;
-  dataSource: string;
+  dataSource: keyof AppDataSources;
 }
 
 const Test = ({ name, dataSource }: TestProps): React.ReactElement => {
-  const value = useDataLoader<string>(dataSource);
+  const value = useDataSource(dataSource);
 
   return (
     <div>

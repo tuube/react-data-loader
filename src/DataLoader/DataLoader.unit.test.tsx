@@ -1,10 +1,15 @@
 import DataLoader, { DataSourceConfig } from "./";
-import DataSource from "./InternalDataSource";
+import DataSource from "./DataSource";
+
+type DataModel = {
+  test1: string;
+  test2: number;
+};
 
 describe("DataLoader", () => {
   const action = jest.fn();
 
-  const sources: DataSourceConfig = {
+  const sources: DataSourceConfig<DataModel> = {
     test1: (update) => {
       action("test1");
       update("");

@@ -1,10 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { DataLoaderProvider } from 'react-data-loader';
-import dataSources from './dataSources';
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import dataSources from "./dataLoader";
+import { DataLoaderProvider } from "react-data-loader";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -12,7 +12,7 @@ ReactDOM.render(
       <App />
     </DataLoaderProvider>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
 
 // If you want to start measuring performance in your app, pass a function

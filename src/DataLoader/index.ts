@@ -1,21 +1,32 @@
-import InternalDataSource, { IUpdate, IAction } from "./InternalDataSource";
-import DataSource from "./DataSource";
+import DataSource, { IUpdate, IAction } from "./DataSource";
 
-interface ISubscription {
+interface ISubscription<T> {
   dataSource: string;
-  updateFunction: IUpdate<unknown>;
+  updateFunction: IUpdate<T>;
 }
 
-export type DataSourceConfig = Record<string, DataSource<unknown>>;
+type InternalDataSourceConfig<DATA_MODEL extends DataSourceModel> = {
+  [K in keyof DATA_MODEL]: IAction<DATA_MODEL[K]>;
+};
 
-export default class DataLoader {
-  private dataSourceConfig: DataSourceConfig;
-  private dataSources: InternalDataSource<unknown>[] = [];
-  private subscriptions: ISubscription[] = [];
+export type DataSourceModel = {
+  [k in DataSourceNameType]: any;
+};
+
+export type DataSourceConfig<T extends DataSourceModel> = {
+  [k in keyof T]: (update: (value: T[k]) => void) => () => void;
+};
+
+type DataSourceNameType = string | number | symbol;
+
+export default class DataLoader<DATA_MODEL extends DataSourceModel> {
+  public dataSourceConfig: InternalDataSourceConfig<DATA_MODEL>;
+  private dataSources: DataSource<DATA_MODEL, any>[] = [];
+  private subscriptions: ISubscription<any>[] = [];
 
   //#region public
 
-  constructor(dataSources: DataSourceConfig) {
+  constructor(dataSources: DataSourceConfig<DATA_MODEL>) {
     this.dataSourceConfig = dataSources;
     try {
       this.dataSources = this.transformDataSources(dataSources);
@@ -24,16 +35,18 @@ export default class DataLoader {
     }
   }
 
-  addSubscriber(
-    dataSource: string,
-    updateFunction: IUpdate<unknown>
+  addSubscriber<T extends keyof DATA_MODEL>(
+    dataSource: T,
+    updateFunction: IUpdate<DataSourceModel[T]>
   ): number | undefined {
     const foundDataSource = this.dataSources.find(
       (ds) => ds.name === dataSource
     );
 
     if (foundDataSource === undefined) {
-      console.warn(`Data source ${dataSource} is not set up, skipping`);
+      console.warn(
+        `Data source ${dataSource.toString()} is not set up, skipping`
+      );
       return;
     }
 
@@ -79,13 +92,15 @@ export default class DataLoader {
   //#region private
 
   private transformDataSources(
-    dataSources: DataSourceConfig
-  ): InternalDataSource<unknown>[] {
-    const internalDataSources: InternalDataSource<unknown>[] = [];
+    dataSources: InternalDataSourceConfig<DATA_MODEL>
+  ): DataSource<DATA_MODEL, DATA_MODEL[keyof DATA_MODEL]>[] {
+    const internalDataSources: DataSource<DATA_MODEL, any>[] = [];
     for (const source in dataSources) {
       if (Object.prototype.hasOwnProperty.call(dataSources, source)) {
         const action = dataSources[source];
-        internalDataSources.push(new InternalDataSource(source, action));
+        internalDataSources.push(
+          new DataSource<DATA_MODEL, any>(source, action)
+        );
       }
     }
     return internalDataSources;
@@ -95,7 +110,7 @@ export default class DataLoader {
     console.log("DataLoader:", ...args);
   }
 
-  private runUpdates(dataSource: string): (value: unknown) => void {
+  private runUpdates(dataSource: DataSourceNameType): (value: unknown) => void {
     return (value) => {
       this.log("Running update for:", dataSource, "value:", value);
       const foundSubscriptions = this.subscriptions.filter(

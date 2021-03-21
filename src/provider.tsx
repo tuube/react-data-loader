@@ -1,21 +1,21 @@
-import React from 'react';
-import DataContext from './context';
-import DataLoader, { DataSourceConfig } from './DataLoader';
-import DataSource from './DataLoader/InternalDataSource';
+import React from "react";
+import GetDataContext from "./context";
+import DataLoader, { DataSourceConfig } from "./DataLoader";
 
-interface IDataLoaderProviderProps {
+interface IDataLoaderProviderProps<DATA_MODEL> {
   children: React.ReactNode;
-  dataSources: DataSourceConfig;
+  dataSources: DataSourceConfig<DATA_MODEL>;
 }
 
-const DataLoaderProvider = ({ dataSources, children }: IDataLoaderProviderProps): React.ReactElement => {
+function DataLoaderProvider<DATA_MODEL>({
+  dataSources,
+  children,
+}: IDataLoaderProviderProps<DATA_MODEL>): React.ReactElement {
   const dataLoader = new DataLoader(dataSources);
 
-  return (
-    <DataContext.Provider value={dataLoader}>
-      {children}
-    </DataContext.Provider>
-  )
-};
+  const Context = GetDataContext<DATA_MODEL>();
+
+  return <Context.Provider value={dataLoader}>{children}</Context.Provider>;
+}
 
 export default DataLoaderProvider;

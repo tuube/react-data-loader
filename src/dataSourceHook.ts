@@ -1,17 +1,22 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useContext, useEffect, useState } from "react";
-import dataLoaderContext from "./context";
-import DataLoader from './DataLoader';
+import createDataLoaderContext from "./context";
+import { DataSourceModel } from "./DataLoader";
 
-const useDataLoader = <T>(dataSource: keyof DataLoader['dataSourceConfig']): T => {
-  const dataLoader = useContext(dataLoaderContext);
+const createDataSourceHook = <MODEL extends DataSourceModel>() => <
+  KEY extends keyof MODEL
+>(
+  dataSource: KEY
+): MODEL[KEY] | undefined => {
+  const dataLoader = useContext(createDataLoaderContext<MODEL>());
+
   if (dataLoader === undefined) {
     throw new Error(
       "useDataLoaderContext must be used within DataLoaderProvider"
     );
   }
 
-  const [value, setValue] = useState<unknown>();
+  const [value, setValue] = useState<MODEL[KEY]>();
 
   useEffect(() => {
     const sub = dataLoader.addSubscriber(dataSource, setValue);
@@ -20,7 +25,7 @@ const useDataLoader = <T>(dataSource: keyof DataLoader['dataSourceConfig']): T =
     };
   }, []);
 
-  return (value as unknown) as T;
+  return value;
 };
 
-export default useDataLoader;
+export default createDataSourceHook;

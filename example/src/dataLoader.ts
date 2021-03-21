@@ -1,7 +1,11 @@
-import { DataSourceConfig } from "react-data-loader";
+import { DataSourceConfig, createDataSourceHook } from "react-data-loader";
 
+export type AppDataSources = {
+  test1: string;
+  test2: number;
+}
 
-const dataSources: DataSourceConfig = {
+const dataSources: DataSourceConfig<AppDataSources> = {
   test1: (update) => {
     let num = 0;
     const interval = setInterval(() => {
@@ -15,7 +19,7 @@ const dataSources: DataSourceConfig = {
   test2: (update) => {
     let num = 0;
     const interval = setInterval(() => {
-      update(`test #${num++}`);
+      update(num);
     }, 1000);
   
     return () => {
@@ -23,5 +27,7 @@ const dataSources: DataSourceConfig = {
     };
   },
 };
+
+export const useDataSource = createDataSourceHook<AppDataSources>();
 
 export default dataSources;
