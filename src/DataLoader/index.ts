@@ -22,6 +22,7 @@ type DataSourceNameType = string | number | symbol;
 export default class DataLoader<DATA_MODEL extends DataSourceModel> {
   public dataSourceConfig: InternalDataSourceConfig<DATA_MODEL>;
   private dataSources: DataSource<DATA_MODEL, any>[] = [];
+  private dataSourceValues: { [K in keyof DATA_MODEL]?: any } = {};
   private subscriptions: ISubscription<any>[] = [];
 
   //#region public
@@ -32,6 +33,10 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       this.dataSources = this.transformDataSources(dataSources);
     } catch (error) {
       console.error("Failed creating DataLoader:", error);
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      (window as any).$ReactDataLoader = this;
     }
   }
 
@@ -50,23 +55,27 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       return;
     }
 
-    this.subscriptions.push({
+    const newSubscriber: ISubscription<any> = {
       dataSource: foundDataSource.name,
       updateFunction,
-    });
+    };
 
-    const newSubscriber = this.subscriptions.length - 1;
+    this.subscriptions.push(newSubscriber);
 
     this.log("Adding subscriber", newSubscriber);
 
     if (
+      // If there are no subscriptions for the given datasource, we start it
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
         .length === 1
     ) {
       foundDataSource.start(this.runUpdates(dataSource));
+    } else {
+      // If the datasource is already running, we push it's last value to the new subscriber
+      newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
     }
 
-    return newSubscriber;
+    return this.subscriptions.length - 1;
   }
 
   removeSubscriber(subscriber: number): void {
@@ -110,13 +119,16 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     console.log("DataLoader:", ...args);
   }
 
-  private runUpdates(dataSource: DataSourceNameType): (value: unknown) => void {
+  private runUpdates(dataSource: keyof DATA_MODEL): (value: unknown) => void {
     return (value) => {
       this.log("Running update for:", dataSource, "value:", value);
       const foundSubscriptions = this.subscriptions.filter(
         (sub) => sub.dataSource === dataSource
       );
-      foundSubscriptions.forEach((sub) => sub.updateFunction(value));
+      foundSubscriptions.forEach((sub) => {
+        sub.updateFunction(value);
+        this.dataSourceValues[dataSource] = value;
+      });
     };
   }
   //#endregion
