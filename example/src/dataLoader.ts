@@ -19,7 +19,7 @@ const dataSources: DataSourceConfig<AppDataSources> = {
   test2: (update) => {
     let num = 0;
     const interval = setInterval(() => {
-      update(num);
+      update(num++);
     }, 1000);
   
     return () => {
