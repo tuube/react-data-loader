@@ -114,7 +114,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     return (value) => {
       this.log("Running update for:", dataSource, "value:", value);
       const foundSubscriptions = this.subscriptions.filter(
-        (sub) => sub.dataSource == dataSource
+        (sub) => sub.dataSource === dataSource
       );
       foundSubscriptions.forEach((sub) => sub.updateFunction(value));
     };
