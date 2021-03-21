@@ -35,9 +35,9 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     }
   }
 
-  addSubscriber<T extends keyof DATA_MODEL>(
-    dataSource: T,
-    updateFunction: IUpdate<DataSourceModel[T]>
+  addSubscriber<DATA_SOURCE extends keyof DATA_MODEL>(
+    dataSource: DATA_SOURCE,
+    updateFunction: IUpdate<DataSourceModel[DATA_SOURCE]>
   ): number | undefined {
     const foundDataSource = this.dataSources.find(
       (ds) => ds.name === dataSource
