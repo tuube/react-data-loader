@@ -72,10 +72,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     );
 
     if (foundDataSource === undefined) {
-      console.warn(
-        `Data source ${dataSource.toString()} is not set up, skipping`
-      );
-      return;
+      throw `Data source ${dataSource.toString()} is not set up, skipping`;
     }
 
     const newSubscriber: ISubscription<any> = {

@@ -4,3 +4,4 @@ dev-log.md
 
 /example/node_modules
 /example/build
+/coverage/
