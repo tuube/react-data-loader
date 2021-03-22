@@ -13,6 +13,7 @@
     "build": "yarn lint && rollup -c",
     "watch": "rollup -cw",
     "test": "jest",
+    "test-watch": "jest --watch",
     "lint": "yarn run eslint",
     "link-react-to-example": "cd node_modules/react; yarn link; cd ../react-dom; yarn link; cd ../../example; yarn link react; yarn link react-dom"
   },

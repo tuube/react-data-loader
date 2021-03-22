@@ -1,4 +1,4 @@
-import { DataSourceConfig, createDataSourceHook } from "react-data-loader";
+import { DataSourceConfig, createDataSourceHook, create } from "react-data-loader";
 
 export type AppDataSources = {
   test1: string;
@@ -28,6 +28,7 @@ const dataSources: DataSourceConfig<AppDataSources> = {
   },
 };
 
-export const useDataSource = createDataSourceHook<AppDataSources>();
+const ProviderAndContext = create(dataSources);
+export default ProviderAndContext;
 
-export default dataSources;
+export const useDataSource = createDataSourceHook<AppDataSources>();

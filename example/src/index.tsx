@@ -3,12 +3,13 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import dataSources from "./dataLoader";
-import { DataLoaderProvider } from "react-data-loader";
+import DataLoaderProviderAndContext from "./dataLoader";;
+
+const [DataLoaderProvider, DataLoaderContext] = DataLoaderProviderAndContext;
 
 ReactDOM.render(
   <React.StrictMode>
-    <DataLoaderProvider dataSources={dataSources}>
+    <DataLoaderProvider>
       <App />
     </DataLoaderProvider>
   </React.StrictMode>,

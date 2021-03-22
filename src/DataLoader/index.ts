@@ -1,11 +1,12 @@
 import DataSource, { IUpdate, IAction } from "./DataSource";
 
 interface ISubscription<T> {
+  id: number;
   dataSource: string;
   updateFunction: IUpdate<T>;
 }
 
-type InternalDataSourceConfig<DATA_MODEL extends DataSourceModel> = {
+export type DataSourceConfig<DATA_MODEL extends DataSourceModel> = {
   [K in keyof DATA_MODEL]: IAction<DATA_MODEL[K]>;
 };
 
@@ -13,33 +14,55 @@ export type DataSourceModel = {
   [k in DataSourceNameType]: any;
 };
 
-export type DataSourceConfig<T extends DataSourceModel> = {
-  [k in keyof T]: (update: (value: T[k]) => void) => () => void;
-};
-
 type DataSourceNameType = string | number | symbol;
 
+export interface DataLoaderConfig {
+  /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
+  log: boolean;
+}
+
 export default class DataLoader<DATA_MODEL extends DataSourceModel> {
-  public dataSourceConfig: InternalDataSourceConfig<DATA_MODEL>;
   private dataSources: DataSource<DATA_MODEL, any>[] = [];
   private dataSourceValues: { [K in keyof DATA_MODEL]?: any } = {};
   private subscriptions: ISubscription<any>[] = [];
+  private nextId: number = 0;
+  private freeIds: number[] = [];
+
+  private config: DataLoaderConfig = {
+    log: false,
+  };
 
   //#region public
 
-  constructor(dataSources: DataSourceConfig<DATA_MODEL>) {
-    this.dataSourceConfig = dataSources;
+  constructor(
+    dataSources: DataSourceConfig<DATA_MODEL>,
+    config?: Partial<DataLoaderConfig>
+  ) {
     try {
       this.dataSources = this.transformDataSources(dataSources);
+      if (config) {
+        this.config = {
+          ...this.config,
+          ...config,
+        };
+      }
     } catch (error) {
       console.error("Failed creating DataLoader:", error);
     }
 
+    // In other that production environemnts, provide the DataLoader-instances via window-object
     if (process.env.NODE_ENV !== "production") {
-      (window as any).$ReactDataLoader = this;
+      (window as any).$ReactDataLoader = (window as any).$ReactDataLoader || [];
+      (window as any).$ReactDataLoader.push(this);
     }
   }
 
+  /**
+   * Add a new subscriber to the specified `dataSource`
+   * @param dataSource The wanted `dataSource`
+   * @param updateFunction The function that gets the new values
+   * @returns The id of the new subscription
+   */
   addSubscriber<DATA_SOURCE extends keyof DATA_MODEL>(
     dataSource: DATA_SOURCE,
     updateFunction: IUpdate<DataSourceModel[DATA_SOURCE]>
@@ -56,6 +79,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     }
 
     const newSubscriber: ISubscription<any> = {
+      id: this.getSubscriptionId(),
       dataSource: foundDataSource.name,
       updateFunction,
     };
@@ -75,17 +99,30 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
     }
 
-    return this.subscriptions.length - 1;
+    return newSubscriber.id;
   }
 
-  removeSubscriber(subscriber: number): void {
-    this.log("Removing subscriber", subscriber);
+  /**
+   * Removes a subscriber
+   * @param subscriberId The id of the subscriber to remove
+   */
+  removeSubscriber(subscriberId: number): void {
+    this.log("Removing subscriber", subscriberId);
 
-    this.subscriptions.splice(subscriber, 1);
+    const index = this.subscriptions.findIndex((s) => s.id === subscriberId);
+
+    // Remove subscriber and put its id to freeIds-array so it can be used again
+    if (index >= 0) {
+      const removedSubscriber = this.subscriptions.splice(index, 1);
+      this.freeIds.push(removedSubscriber[0].id);
+    }
 
     this.checkEmptyDataSources();
   }
 
+  /**
+   * Look for empty dataSources and if found, stop them
+   */
   private checkEmptyDataSources() {
     this.log("Checking for empty data sources");
 
@@ -100,8 +137,23 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
   //#region private
 
+  /**
+   * Get a valid id for a new subscription.
+   * The id is gotten from freeIds-array if it has any, or a new id is created.
+   */
+  private getSubscriptionId(): number {
+    if (this.freeIds.length > 0) {
+      return this.freeIds.shift() as number;
+    }
+    return this.nextId++;
+  }
+
+  /**
+   * Transforms figen dataSource configuration to the correcr format
+   * @param dataSources The dataSource config
+   */
   private transformDataSources(
-    dataSources: InternalDataSourceConfig<DATA_MODEL>
+    dataSources: DataSourceConfig<DATA_MODEL>
   ): DataSource<DATA_MODEL, DATA_MODEL[keyof DATA_MODEL]>[] {
     const internalDataSources: DataSource<DATA_MODEL, any>[] = [];
     for (const source in dataSources) {
@@ -115,10 +167,20 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     return internalDataSources;
   }
 
+  /**
+   * Logs the given data if logging is active
+   * @param args The stuff to log
+   */
   private log(...args: unknown[]): void {
-    console.log("DataLoader:", ...args);
+    if (this.config.log) {
+      console.log("DataLoader:", ...args);
+    }
   }
 
+  /**
+   * Push updated values to the `dataSource`'s subscribers
+   * @param dataSource The dataSource
+   */
   private runUpdates(dataSource: keyof DATA_MODEL): (value: unknown) => void {
     return (value) => {
       this.log("Running update for:", dataSource, "value:", value);
