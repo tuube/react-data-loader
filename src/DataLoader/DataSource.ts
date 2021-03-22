@@ -5,7 +5,7 @@ export interface IStopFunc {
 }
 
 export interface IAction<VALUE> {
-  (update: IUpdate<VALUE>): IStopFunc;
+  (update: IUpdate<VALUE>): IStopFunc | void;
 }
 
 export interface IUpdate<VALUE> {
@@ -31,7 +31,10 @@ export default class DataSource<
    * It is used to get the new values from the datasource.
    */
   start(update: IUpdate<DATA_MODEL[KEY]>): void {
-    this.stopFunc = this.action(update);
+    const _stopFunction = this.action(update);
+    if (_stopFunction !== undefined) {
+      this.stopFunc = _stopFunction;
+    }
   }
 
   /**
