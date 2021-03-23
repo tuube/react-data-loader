@@ -12,7 +12,7 @@ const createDataSourceHook = <MODEL extends DataSourceModel>() => <
 
   if (dataLoader === undefined) {
     throw new Error(
-      "useDataLoaderContext must be used within DataLoaderProvider"
+      "useDataSource must be used within DataLoaderProvider"
     );
   }
 
