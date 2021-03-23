@@ -5,7 +5,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import DataLoaderProviderAndContext from "./dataLoader";;
 
-const [DataLoaderProvider, DataLoaderContext] = DataLoaderProviderAndContext;
+const { provider: DataLoaderProvider } = DataLoaderProviderAndContext;
 
 ReactDOM.render(
   <React.StrictMode>

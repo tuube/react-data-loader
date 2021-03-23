@@ -1,55 +1,35 @@
 import React from "react";
-import GetDataContext, { createDataLoaderContext } from "./context";
-import DataLoader, { DataSourceConfig } from "./DataLoader";
+import createDataLoaderContext from "./context";
+import DataLoader, { DataLoaderConfig, DataSourceConfig } from "./DataLoader";
 
-interface IDataLoaderProviderProps<DATA_MODEL> {
-  children: React.ReactNode;
-  dataSources: DataSourceConfig<DATA_MODEL>;
-}
-
-function DataLoaderProvider<DATA_MODEL>({
-  dataSources,
-  children,
-}: IDataLoaderProviderProps<DATA_MODEL>): React.ReactElement {
-  const dataLoader = new DataLoader(dataSources);
-
-  const Context = GetDataContext<DATA_MODEL>();
-
-  return <Context.Provider value={dataLoader}>{children}</Context.Provider>;
-}
-
-type DataLoaderProviderWithoutContextProps= {
+type DataLoaderProviderProps = {
   children: React.ReactNode;
 };
 
 function createDataLoaderProvider<DATA_MODEL>(
   dataSources: DataSourceConfig<DATA_MODEL>,
-  Context: React.Context<DataLoader<DATA_MODEL> | undefined>
+  Context: React.Context<DataLoader<DATA_MODEL> | undefined>,
+  dataLoaderConfig?: DataLoaderConfig,
 ) {
-
-  return function DataLoaderProviderWithContext({
+  return function DataLoaderProvider({
     children,
-  }: DataLoaderProviderWithoutContextProps): React.ReactElement {
-    const dataLoader = new DataLoader(dataSources);
+  }: DataLoaderProviderProps): React.ReactElement {
+    const dataLoader = new DataLoader(dataSources, dataLoaderConfig);
 
     return <Context.Provider value={dataLoader}>{children}</Context.Provider>;
   };
 }
 
-export default DataLoaderProvider;
+type DataLoaderProviderAndContext<DATA_MODEL> = {
+  provider: (props: DataLoaderProviderProps) => React.ReactElement;
+  context: React.Context<DataLoader<DATA_MODEL> | undefined>;
+};
 
-export function create<DATA_MODEL>(
-  dataSources: DataSourceConfig<DATA_MODEL>
-): [
-  (
-    props: DataLoaderProviderWithoutContextProps
-  ) => React.ReactElement,
-  React.Context<DataLoader<DATA_MODEL> | undefined>
-] {
+export default function createDataLoaderProviderAndContext<DATA_MODEL>(
+  dataSources: DataSourceConfig<DATA_MODEL>,
+  config?: DataLoaderConfig,
+): DataLoaderProviderAndContext<DATA_MODEL> {
   const context = createDataLoaderContext<DATA_MODEL>();
 
-  return [
-    createDataLoaderProvider(dataSources, context),
-    context,
-  ];
+  return { provider: createDataLoaderProvider(dataSources, context, config), context };
 }
