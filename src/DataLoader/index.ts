@@ -50,7 +50,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       console.error("Failed creating DataLoader:", error);
     }
 
-    // In other that production environemnts, provide the DataLoader-instances via window-object
+    // In other than production environments, provide the DataLoader-instances via window-object
     if (process.env.NODE_ENV !== "production") {
       (window as any).$ReactDataLoader = (window as any).$ReactDataLoader || [];
       (window as any).$ReactDataLoader.push(this);
