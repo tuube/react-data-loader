@@ -18,7 +18,7 @@ describe("DataSource", () => {
   });
 
   it("passes update function to the action", () => {
-    const ds = new DataSource("test1", (update) => {
+    const ds = new DataSource("test1", (update, data) => {
       update('test');
       return () => {};
     });

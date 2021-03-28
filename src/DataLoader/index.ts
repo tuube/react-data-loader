@@ -18,7 +18,9 @@ type DataSourceNameType = string | number | symbol;
 
 export interface DataLoaderConfig {
   /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
-  log: boolean;
+  log?: boolean;
+  /** Global data for data sources */
+  data?: any;
 }
 
 export default class DataLoader<DATA_MODEL extends DataSourceModel> {
@@ -90,7 +92,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
         .length === 1
     ) {
-      foundDataSource.start(this.runUpdates(dataSource));
+      foundDataSource.start(this.runUpdates(dataSource), this.config.data);
     } else {
       // If the datasource is already running, we push it's last value to the new subscriber
       newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
@@ -104,6 +106,28 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
    * @param subscriberId The id of the subscriber to remove
    */
   removeSubscriber(subscriberId: number): void {
+    this._removeSubscriber(subscriberId);
+    this.checkEmptyDataSources();
+  }
+
+  /**
+   * Removes all existing subscriptions from all data sources
+   */
+  removeAllSubscriptions(): void {
+    this.log("Removing all subscribers");
+
+    this.subscriptions.forEach((sub) => this._removeSubscriber(sub.id));
+  }
+
+  //#endregion
+
+  //#region private
+
+  /**
+   * Removes a subscriber
+   * @param subscriberId The id of the subscriber to remove
+   */
+  _removeSubscriber(subscriberId: number): void {
     this.log("Removing subscriber", subscriberId);
 
     const index = this.subscriptions.findIndex((s) => s.id === subscriberId);
@@ -113,8 +137,6 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       const removedSubscriber = this.subscriptions.splice(index, 1);
       this.freeIds.push(removedSubscriber[0].id);
     }
-
-    this.checkEmptyDataSources();
   }
 
   /**
@@ -130,9 +152,6 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       }
     });
   }
-  //#endregion
-
-  //#region private
 
   /**
    * Get a valid id for a new subscription.

@@ -5,7 +5,7 @@ export interface IStopFunc {
 }
 
 export interface IAction<VALUE> {
-  (update: IUpdate<VALUE>): IStopFunc | void;
+  (update: IUpdate<VALUE>, globalData?: any): IStopFunc | void;
 }
 
 export interface IUpdate<VALUE> {
@@ -27,11 +27,12 @@ export default class DataSource<
 
   /**
    * Start the datasource
-   * @param update The function that is given to the action of the datasource. 
+   * @param update The function that is given to the action of the datasource.
    * It is used to get the new values from the datasource.
+   * @param data Optional global data from the data loader
    */
-  start(update: IUpdate<DATA_MODEL[KEY]>): void {
-    const _stopFunction = this.action(update);
+  start(update: IUpdate<DATA_MODEL[KEY]>, data?: any): void {
+    const _stopFunction = this.action(update, data);
     if (_stopFunction !== undefined) {
       this.stopFunc = _stopFunction;
     }

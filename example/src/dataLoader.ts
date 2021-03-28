@@ -9,10 +9,10 @@ export type AppDataSources = {
 };
 
 const dataSources: DataSourceConfig<AppDataSources> = {
-  test1: (update) => {
+  test1: (update, data) => {
     let num = 0;
     const interval = setInterval(() => {
-      update(`test #${num++}`);
+      update(`id: ${data?.id} #${num++}`);
     }, 1000);
 
     return () => {
@@ -31,7 +31,9 @@ const dataSources: DataSourceConfig<AppDataSources> = {
   },
 };
 
-const { hook, provider } = createDataLoaderProviderAndHook(dataSources);
+const { hook, provider } = createDataLoaderProviderAndHook(dataSources, {
+  data: { id: 2 },
+});
 export default provider;
 
 export const useDataSource = hook;
