@@ -1,6 +1,7 @@
 import React from "react";
 import createDataLoaderContext from "./context";
 import DataLoader, { DataLoaderConfig, DataSourceConfig } from "./DataLoader";
+import createDataSourceHook, { DataSourceHook } from "./dataSourceHook";
 
 type DataLoaderProviderProps = {
   children: React.ReactNode;
@@ -20,16 +21,16 @@ function createDataLoaderProvider<DATA_MODEL>(
   };
 }
 
-type DataLoaderProviderAndContext<DATA_MODEL> = {
+type DataLoaderProviderAndHook<DATA_MODEL> = {
   provider: (props: DataLoaderProviderProps) => React.ReactElement;
-  context: React.Context<DataLoader<DATA_MODEL> | undefined>;
+  hook: DataSourceHook<keyof DATA_MODEL>;
 };
 
-export default function createDataLoaderProviderAndContext<DATA_MODEL>(
+export default function createDataLoaderProviderAndHook<DATA_MODEL>(
   dataSources: DataSourceConfig<DATA_MODEL>,
   config?: DataLoaderConfig,
-): DataLoaderProviderAndContext<DATA_MODEL> {
+): DataLoaderProviderAndHook<DATA_MODEL> {
   const context = createDataLoaderContext<DATA_MODEL>();
 
-  return { provider: createDataLoaderProvider(dataSources, context, config), context };
+  return { provider: createDataLoaderProvider(dataSources, context, config), hook: createDataSourceHook(context) };
 }

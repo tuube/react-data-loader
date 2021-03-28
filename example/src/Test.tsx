@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { useDataSource, AppDataSources } from "./dataLoader";
 
@@ -8,11 +8,15 @@ interface TestProps {
 }
 
 const Test = ({ name, dataSource }: TestProps): React.ReactElement => {
-  const value = useDataSource(dataSource);
+  const [innerValue, setInnerValue] = useState('');
+
+  const value = useDataSource(dataSource, (value) => {
+    setInnerValue('inner' + value);
+  });
 
   return (
     <div>
-      {name} {value}
+      {name} {value} ({innerValue})
     </div>
   );
 };

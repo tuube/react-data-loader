@@ -1,5 +1,9 @@
-import createDataLoaderProviderAndContext from "./provider";
+import createDataLoaderProviderAndHook from "./provider";
 import createDataSourceHook from "./dataSourceHook";
 import { DataSourceConfig } from "./DataLoader";
 
-export { createDataLoaderProviderAndContext, createDataSourceHook, DataSourceConfig };
+export {
+  createDataLoaderProviderAndHook,
+  createDataSourceHook,
+  DataSourceConfig,
+};

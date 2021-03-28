@@ -3,9 +3,7 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import DataLoaderProviderAndContext from "./dataLoader";;
-
-const { provider: DataLoaderProvider } = DataLoaderProviderAndContext;
+import DataLoaderProvider from "./dataLoader";;
 
 ReactDOM.render(
   <React.StrictMode>
