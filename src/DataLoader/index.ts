@@ -16,9 +16,14 @@ export type DataSourceModel = {
 
 type DataSourceNameType = string | number | symbol;
 
+interface PersistedData<DATA_MODEL> {
+  dataSourceValues: { [K in keyof DATA_MODEL]?: any };
+}
+
 export interface DataLoaderConfig {
   /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
   log?: boolean;
+  persist?: "localStorage" | "sessionStorage";
   /** Global data for data sources */
   data?: any;
 }
@@ -47,6 +52,12 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
           ...this.config,
           ...config,
         };
+      }
+
+      const peristedValue = this.loadPersistedValue(this.config.persist);
+
+      if (peristedValue !== null) {
+        this.dataSourceValues = peristedValue.dataSourceValues;
       }
     } catch (error) {
       console.error("Failed creating DataLoader:", error);
@@ -92,6 +103,10 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
         .length === 1
     ) {
+      // If there is an existing value (from persitence), pass it to the subscriber
+      if (this.dataSourceValues[foundDataSource.name]) {
+        newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
+      }
       foundDataSource.start(this.runUpdates(dataSource), this.config.data);
     } else {
       // If the datasource is already running, we push it's last value to the new subscriber
@@ -123,11 +138,47 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
   //#region private
 
+  private persist(persistenceType: DataLoaderConfig["persist"]): void {
+    if (!persistenceType) return;
+
+    const dataToPersist: PersistedData<DATA_MODEL> = {
+      dataSourceValues: this.dataSourceValues,
+    };
+
+    const json = JSON.stringify(dataToPersist);
+
+    switch (persistenceType) {
+      case "localStorage":
+        localStorage.setItem("DataLoader-persist", json);
+      case "sessionStorage":
+        sessionStorage.setItem("DataLoader-persist", json);
+    }
+  }
+
+  private loadPersistedValue(
+    persistenceType: DataLoaderConfig["persist"]
+  ): PersistedData<DATA_MODEL> | null {
+    if (!persistenceType) return null;
+
+    let json: string | null;
+
+    switch (persistenceType) {
+      case "localStorage":
+        json = localStorage.getItem("DataLoader-persist");
+      case "sessionStorage":
+        json = sessionStorage.getItem("DataLoader-persist");
+    }
+
+    if (json == null) return null;
+
+    return JSON.parse(json) as PersistedData<DATA_MODEL>;
+  }
+
   /**
    * Removes a subscriber
    * @param subscriberId The id of the subscriber to remove
    */
-  _removeSubscriber(subscriberId: number): void {
+  private _removeSubscriber(subscriberId: number): void {
     this.log("Removing subscriber", subscriberId);
 
     const index = this.subscriptions.findIndex((s) => s.id === subscriberId);
@@ -207,6 +258,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
         sub.updateFunction(value);
         this.dataSourceValues[dataSource] = value;
       });
+      this.persist(this.config.persist);
     };
   }
   //#endregion
