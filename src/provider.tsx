@@ -24,7 +24,7 @@ function createDataLoaderProvider<DATA_MODEL>(
 type DataLoaderProviderAndHook<DATA_MODEL> = {
   provider: (props: DataLoaderProviderProps) => React.ReactElement;
   /** A hook for listening to a data source */
-  hook: DataSourceHook<keyof DATA_MODEL>;
+  hook: DataSourceHook<DATA_MODEL>;
 };
 
 /**

@@ -83,13 +83,13 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
   addSubscriber<DATA_SOURCE extends keyof DATA_MODEL>(
     dataSource: DATA_SOURCE,
     updateFunction: IUpdate<DataSourceModel[DATA_SOURCE]>
-  ): number | undefined {
+  ): number {
     const foundDataSource = this.dataSources.find(
       (ds) => ds.name === dataSource
     );
 
     if (foundDataSource === undefined) {
-      throw `Data source ${dataSource.toString()} is not set up, skipping`;
+      throw `Data source ${dataSource.toString()} is not set up`;
     }
 
     const newSubscriber: ISubscription<any> = {

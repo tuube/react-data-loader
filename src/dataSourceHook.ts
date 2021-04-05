@@ -8,11 +8,11 @@ import DataLoader, { DataSourceModel } from "./DataLoader";
  * @param sideEffect Optional side-effect to run when a new value is gotten
  * @returns The new value from the data source
  */
-export interface DataSourceHook<KEY extends keyof DataSourceModel> {
-  (
+export interface DataSourceHook<MODEL extends DataSourceModel> {
+  <KEY extends keyof MODEL>(
     dataSource: KEY,
-    sideEffect?: (value: DataSourceModel[KEY] | undefined) => void
-  ): DataSourceModel[KEY] | undefined;
+    sideEffect?: (value: MODEL[KEY] | null) => void
+  ): MODEL[KEY] | null;
 }
 
 /**
@@ -22,24 +22,28 @@ export interface DataSourceHook<KEY extends keyof DataSourceModel> {
  */
 const createDataSourceHook = <MODEL extends DataSourceModel>(
   context: React.Context<DataLoader<MODEL> | undefined>
-): DataSourceHook<keyof MODEL> => {
-  function useDataSource<KEY extends keyof MODEL>(
+): DataSourceHook<MODEL> => {
+  return <KEY extends keyof MODEL>(
     dataSource: KEY,
-    sideEffect?: (value: MODEL[KEY] | undefined) => void
-  ): MODEL[KEY] | undefined {
+    sideEffect?: (value: MODEL[KEY] | null) => void
+  ): MODEL[KEY] | null => {
     const dataLoader = useContext(context);
 
     if (dataLoader === undefined) {
       throw new Error("useDataSource must be used within DataLoaderProvider");
     }
 
-    const [value, setValue] = useState<MODEL[KEY]>();
+    const [value, setValue] = useState<MODEL[KEY] | null>(null);
 
     useEffect(() => {
-      const sub = dataLoader.addSubscriber(dataSource, setValue);
-      return () => {
-        if (sub !== undefined) dataLoader.removeSubscriber(sub);
-      };
+      try {
+        const sub = dataLoader.addSubscriber(dataSource, setValue);
+        return () => {
+          dataLoader.removeSubscriber(sub);
+        };
+      } catch (error) {
+        console.error(error);
+      }
     }, []);
 
     useEffect(() => {
@@ -49,8 +53,6 @@ const createDataSourceHook = <MODEL extends DataSourceModel>(
     }, [value]);
 
     return value;
-  }
-
-  return useDataSource;
+  };
 };
 export default createDataSourceHook;
