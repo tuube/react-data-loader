@@ -20,9 +20,13 @@ interface PersistedData<DATA_MODEL> {
   dataSourceValues: { [K in keyof DATA_MODEL]?: any };
 }
 
+/**
+ * Configuration object for data loader
+ */
 export interface DataLoaderConfig {
   /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
   log?: boolean;
+  /** Persist the data to browser */
   persist?: "localStorage" | "sessionStorage";
   /** Global data for data sources */
   data?: any;
