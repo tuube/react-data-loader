@@ -4,35 +4,40 @@ import {
 } from "react-data-loader";
 
 export type AppDataSources = {
-  test1: string;
-  test2: number;
+  todos: Todo[];
+  posts: Post[];
 };
 
+export type Todo = {
+  userId: number;
+  id: number;
+  title: string;
+  completed: boolean;
+};
+
+export interface Post {
+  userId: number;
+  id: number;
+  title: string;
+  body: string;
+}
+
 const dataSources: DataSourceConfig<AppDataSources> = {
-  test1: (update, data) => {
-    let num = 0;
-    const interval = setInterval(() => {
-      update(`id: ${data?.id} #${num++}`);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
+  todos: (update, data) => {
+    fetch("https://jsonplaceholder.typicode.com/todos")
+      .then((response) => response.json())
+      .then((json: Todo[]) => update(json));
   },
-  test2: (update) => {
-    let num = 0;
-    const interval = setInterval(() => {
-      update(num++);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  },
+  posts: (update) => {
+    fetch("https://jsonplaceholder.typicode.com/posts")
+      .then((response) => response.json())
+      .then((json: Post[]) => update(json));
+  }
 };
 
 const { hook, provider } = createDataLoaderProviderAndHook(dataSources, {
   data: { id: 2 },
+  persist: "localStorage",
 });
 export default provider;
 

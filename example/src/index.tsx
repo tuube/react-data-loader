@@ -3,11 +3,16 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import DataLoaderProvider from "./dataLoader";;
+import DataLoaderProvider from "./dataLoader";
+import { DataLoaderEvent } from "react-data-loader";
+
+const onDataLoaderEvent = (e: DataLoaderEvent) => {
+  console.log(e);
+};
 
 ReactDOM.render(
   <React.StrictMode>
-    <DataLoaderProvider>
+    <DataLoaderProvider onEvent={onDataLoaderEvent}>
       <App />
     </DataLoaderProvider>
   </React.StrictMode>,

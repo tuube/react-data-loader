@@ -1,28 +1,26 @@
 import React, { useState } from "react";
 import "./App.css";
-import Test from "./Test";
+import Posts from "./Posts";
+import Todos from "./Todos";
 
 function App() {
-  const [tests, setTests] = useState<string[]>([]);
+  const [showTodos, setShowTodos] = useState(true);
+  const [showPosts, setShowPosts] = useState(true);
 
-  const addTest = () => {
-    setTests((tests) => [...tests, `Test${tests.length + 1}`]);
-  };
-
-  const removeTest = () => {
-    setTests((tests) => [...tests.slice(0, tests.length - 1)]);
-  };
 
   return (
-    <div className="App">
-      <button onClick={addTest}>Add test</button>
-      <button onClick={removeTest}>Remove test</button>
-      <div style={{ margin: "2rem" }}>
-        {tests.map((name, i) => (
-          <Test name={name} key={name} dataSource={i % 2 === 0 ? 'test1': 'test2'} />
-        ))}
+      <div className="App">
+        <div className="row">
+          <div className="col">
+            <button onClick={() => setShowTodos(!showTodos)}>Show todos</button>
+            <button onClick={() => setShowPosts(!showPosts)}>Show posts</button>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">{showTodos && <Todos />}</div>
+          <div className="col">{showPosts && <Posts />}</div>
+        </div>
       </div>
-    </div>
   );
 }
 

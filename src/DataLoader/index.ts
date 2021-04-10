@@ -20,16 +20,42 @@ interface PersistedData<DATA_MODEL> {
   dataSourceValues: { [K in keyof DATA_MODEL]?: any };
 }
 
+export interface DataLoaderEvent {
+  action: any;
+  data: any;
+}
+
+interface DataSourceEvent<DATA_MODEL extends DataSourceModel>
+  extends DataLoaderEvent {
+  action: "subscribe" | "unsubsribe";
+  data: {
+    dataSource: keyof DATA_MODEL;
+    subscriberId: number;
+  };
+}
+
+interface DataLoaderInternalEvent<DATA_MODEL extends DataSourceModel>
+  extends DataLoaderEvent {
+  action: "initialize" | "uninitialize";
+}
+
+interface DataLoaderPersistEvent<DATA_MODEL extends DataSourceModel>
+  extends DataLoaderEvent {
+  action: "persist" | "rehydrate";
+  data: any;
+}
+
 /**
  * Configuration object for data loader
  */
-export interface DataLoaderConfig {
+export interface DataLoaderConfig<DATA_MODEL extends DataSourceModel> {
   /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
   log?: boolean;
   /** Persist the data to browser */
   persist?: "localStorage" | "sessionStorage";
   /** Global data for data sources */
   data?: any;
+  onEvent?: (e: DataLoaderEvent) => void;
 }
 
 export default class DataLoader<DATA_MODEL extends DataSourceModel> {
@@ -39,7 +65,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
   private nextId: number = 0;
   private freeIds: number[] = [];
 
-  private config: DataLoaderConfig = {
+  private config: DataLoaderConfig<DATA_MODEL> = {
     log: false,
   };
 
@@ -47,7 +73,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
   constructor(
     dataSources: DataSourceConfig<DATA_MODEL>,
-    config?: Partial<DataLoaderConfig>
+    config?: Partial<DataLoaderConfig<DATA_MODEL>>
   ) {
     try {
       this.dataSources = this.transformDataSources(dataSources);
@@ -58,7 +84,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
         };
       }
 
-      const peristedValue = this.loadPersistedValue(this.config.persist);
+      const peristedValue = this.rehydrate(this.config.persist);
 
       if (peristedValue !== null) {
         this.dataSourceValues = peristedValue.dataSourceValues;
@@ -69,8 +95,10 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
     // In other than production environments, provide the DataLoader-instances via window-object
     if (process.env.NODE_ENV !== "production") {
-      (window as any).$ReactDataLoader = (window as any).$ReactDataLoader || [];
-      (window as any).$ReactDataLoader.push(this);
+      (window as any).$ReactDataLoader = (window as any).$ReactDataLoader || {};
+      (window as any).$ReactDataLoader[
+        this.dataSources.map((ds) => ds.name).join("|")
+      ] = this;
     }
   }
 
@@ -109,13 +137,23 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     ) {
       // If there is an existing value (from persitence), pass it to the subscriber
       if (this.dataSourceValues[foundDataSource.name]) {
-        newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
+        newSubscriber.updateFunction(
+          this.dataSourceValues[foundDataSource.name]
+        );
       }
       foundDataSource.start(this.runUpdates(dataSource), this.config.data);
     } else {
       // If the datasource is already running, we push it's last value to the new subscriber
       newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
     }
+
+    this.fireEvent<DataSourceEvent<DATA_MODEL>>({
+      action: "subscribe",
+      data: {
+        dataSource,
+        subscriberId: newSubscriber.id,
+      },
+    });
 
     return newSubscriber.id;
   }
@@ -142,7 +180,15 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
   //#region private
 
-  private persist(persistenceType: DataLoaderConfig["persist"]): void {
+  private fireEvent<T extends DataLoaderEvent>(e: T) {
+    if (this.config.onEvent !== undefined) {
+      this.config.onEvent(e);
+    }
+  }
+
+  private persist(
+    persistenceType: DataLoaderConfig<DATA_MODEL>["persist"]
+  ): void {
     if (!persistenceType) return;
 
     const dataToPersist: PersistedData<DATA_MODEL> = {
@@ -157,10 +203,17 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       case "sessionStorage":
         sessionStorage.setItem("DataLoader-persist", json);
     }
+
+    this.fireEvent<DataLoaderPersistEvent<DATA_MODEL>>({
+      action: 'persist',
+      data: {
+        [persistenceType]: dataToPersist,
+      },
+    });
   }
 
-  private loadPersistedValue(
-    persistenceType: DataLoaderConfig["persist"]
+  private rehydrate(
+    persistenceType: DataLoaderConfig<DATA_MODEL>["persist"]
   ): PersistedData<DATA_MODEL> | null {
     if (!persistenceType) return null;
 
@@ -173,9 +226,22 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
         json = sessionStorage.getItem("DataLoader-persist");
     }
 
-    if (json == null) return null;
+    let data: PersistedData<DATA_MODEL> | null; 
 
-    return JSON.parse(json) as PersistedData<DATA_MODEL>;
+    if (json == null) {
+      data = null;
+    } else {
+      data = JSON.parse(json) as PersistedData<DATA_MODEL>;
+    }
+
+    this.fireEvent<DataLoaderPersistEvent<DATA_MODEL>>({
+      action: 'rehydrate',
+      data: {
+        [persistenceType]: data,
+      },
+    });
+
+    return data;
   }
 
   /**
@@ -189,8 +255,16 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
     // Remove subscriber and put its id to freeIds-array so it can be used again
     if (index >= 0) {
-      const removedSubscriber = this.subscriptions.splice(index, 1);
-      this.freeIds.push(removedSubscriber[0].id);
+      const [removedSubscriber] = this.subscriptions.splice(index, 1);
+      this.freeIds.push(removedSubscriber.id);
+
+      this.fireEvent<DataSourceEvent<DATA_MODEL>>({
+        action: "unsubsribe",
+        data: {
+          dataSource: removedSubscriber.dataSource,
+          subscriberId: removedSubscriber.id,
+        },
+      });
     }
   }
 
