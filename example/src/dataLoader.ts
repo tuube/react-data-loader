@@ -38,6 +38,9 @@ const dataSources: DataSourceConfig<AppDataSources> = {
 const { hook, provider } = createDataLoaderProviderAndHook(dataSources, {
   data: { id: 2 },
   persist: "localStorage",
+  onEvent: (e) => {
+    console.log(e);
+  }
 });
 export default provider;
 

@@ -20,30 +20,42 @@ interface PersistedData<DATA_MODEL> {
   dataSourceValues: { [K in keyof DATA_MODEL]?: any };
 }
 
-export interface DataLoaderEvent {
-  action: any;
-  data: any;
+export interface DataLoaderEvent<
+  DATA_MODEL extends DataSourceModel,
+  TYPE extends DataLoaderEventActionType
+> {
+  action: TYPE;
+  data: DataLoaderEventActionData<DATA_MODEL>[TYPE];
 }
 
-interface DataSourceEvent<DATA_MODEL extends DataSourceModel>
-  extends DataLoaderEvent {
-  action: "subscribe" | "unsubsribe";
-  data: {
+type DataLoaderEventActionType =
+  | "subscribe"
+  | "unsubsribe"
+  | "initialize"
+  | "uninitialize"
+  | "persist"
+  | "rehydrate";
+
+type DataLoaderEventActionData<DATA_MODEL> = {
+  subscribe: {
     dataSource: keyof DATA_MODEL;
     subscriberId: number;
   };
-}
+  unsubsribe: {
+    dataSource: keyof DATA_MODEL;
+    subscriberId: number;
+  };
+  initialize: undefined;
+  uninitialize: undefined;
+  persist: {
+    [K in PersistanceType]?: PersistedData<DATA_MODEL>;
+  };
+  rehydrate: {
+    [K in PersistanceType]?: PersistedData<DATA_MODEL>;
+  };
+};
 
-interface DataLoaderInternalEvent<DATA_MODEL extends DataSourceModel>
-  extends DataLoaderEvent {
-  action: "initialize" | "uninitialize";
-}
-
-interface DataLoaderPersistEvent<DATA_MODEL extends DataSourceModel>
-  extends DataLoaderEvent {
-  action: "persist" | "rehydrate";
-  data: any;
-}
+type PersistanceType = "localStorage" | "sessionStorage";
 
 /**
  * Configuration object for data loader
@@ -52,10 +64,12 @@ export interface DataLoaderConfig<DATA_MODEL extends DataSourceModel> {
   /** Whether to log the actions of this `DataLoader`, or not. Default: `true` */
   log?: boolean;
   /** Persist the data to browser */
-  persist?: "localStorage" | "sessionStorage";
+  persist?: PersistanceType;
   /** Global data for data sources */
   data?: any;
-  onEvent?: (e: DataLoaderEvent) => void;
+  onEvent?: <TYPE extends DataLoaderEventActionType>(
+    e: DataLoaderEvent<DATA_MODEL, TYPE>
+  ) => void;
 }
 
 export default class DataLoader<DATA_MODEL extends DataSourceModel> {
@@ -131,11 +145,11 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
     this.log("Adding subscriber", newSubscriber);
 
     if (
-      // If there are no subscriptions for the given datasource, we start it
+      // If there are no other subscriptions for the given datasource (this is the first one), we start it
       this.subscriptions.filter((sub) => sub.dataSource === dataSource)
         .length === 1
     ) {
-      // If there is an existing value (from persitence), pass it to the subscriber
+      // If there is an existing value, pass it to the subscriber
       if (this.dataSourceValues[foundDataSource.name]) {
         newSubscriber.updateFunction(
           this.dataSourceValues[foundDataSource.name]
@@ -147,7 +161,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       newSubscriber.updateFunction(this.dataSourceValues[foundDataSource.name]);
     }
 
-    this.fireEvent<DataSourceEvent<DATA_MODEL>>({
+    this.fireEvent({
       action: "subscribe",
       data: {
         dataSource,
@@ -180,7 +194,9 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
   //#region private
 
-  private fireEvent<T extends DataLoaderEvent>(e: T) {
+  private fireEvent<T extends DataLoaderEventActionType>(
+    e: DataLoaderEvent<DATA_MODEL, T>
+  ) {
     if (this.config.onEvent !== undefined) {
       this.config.onEvent(e);
     }
@@ -197,15 +213,10 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
 
     const json = JSON.stringify(dataToPersist);
 
-    switch (persistenceType) {
-      case "localStorage":
-        localStorage.setItem("DataLoader-persist", json);
-      case "sessionStorage":
-        sessionStorage.setItem("DataLoader-persist", json);
-    }
+    window[persistenceType].setItem("DataLoader-persist", json);
 
-    this.fireEvent<DataLoaderPersistEvent<DATA_MODEL>>({
-      action: 'persist',
+    this.fireEvent({
+      action: "persist",
       data: {
         [persistenceType]: dataToPersist,
       },
@@ -217,25 +228,13 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
   ): PersistedData<DATA_MODEL> | null {
     if (!persistenceType) return null;
 
-    let json: string | null;
+    let json = window[persistenceType].getItem("DataLoader-persist");
 
-    switch (persistenceType) {
-      case "localStorage":
-        json = localStorage.getItem("DataLoader-persist");
-      case "sessionStorage":
-        json = sessionStorage.getItem("DataLoader-persist");
-    }
+    let data =
+      json !== null ? (JSON.parse(json) as PersistedData<DATA_MODEL>) : null;
 
-    let data: PersistedData<DATA_MODEL> | null; 
-
-    if (json == null) {
-      data = null;
-    } else {
-      data = JSON.parse(json) as PersistedData<DATA_MODEL>;
-    }
-
-    this.fireEvent<DataLoaderPersistEvent<DATA_MODEL>>({
-      action: 'rehydrate',
+    this.fireEvent({
+      action: "rehydrate",
       data: {
         [persistenceType]: data,
       },
@@ -258,7 +257,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
       const [removedSubscriber] = this.subscriptions.splice(index, 1);
       this.freeIds.push(removedSubscriber.id);
 
-      this.fireEvent<DataSourceEvent<DATA_MODEL>>({
+      this.fireEvent({
         action: "unsubsribe",
         data: {
           dataSource: removedSubscriber.dataSource,
