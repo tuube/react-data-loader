@@ -293,7 +293,7 @@ export default class DataLoader<DATA_MODEL extends DataSourceModel> {
   }
 
   /**
-   * Transforms figen dataSource configuration to the correcr format
+   * Transforms given dataSource configuration to the correct format
    * @param dataSources The dataSource config
    */
   private transformDataSources(
